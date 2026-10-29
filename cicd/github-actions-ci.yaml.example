@@ -1,0 +1,55 @@
+# 复制到仓库的 .github/workflows/ci.yaml
+# 使用前在 GitHub 仓库 Settings → Secrets 里配好：
+#   REGISTRY_URL、REGISTRY_USERNAME、REGISTRY_PASSWORD
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  REGISTRY: ${{ secrets.REGISTRY_URL }}
+  IMAGE_NAME: myapp
+
+jobs:
+  helm-validate:
+    name: 'Validate Helm Chart'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Run helm lint
+        run: helm lint ./helm/nginx-monitoring --strict
+
+      - name: Run helm template (render check)
+        run: helm template nginx-monitoring ./helm/nginx-monitoring > /dev/null
+
+  build-and-push:
+    name: 'Build and Push Docker Image'
+    needs: helm-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Private Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/day1-app
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

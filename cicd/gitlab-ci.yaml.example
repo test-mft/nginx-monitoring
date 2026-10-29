@@ -1,0 +1,37 @@
+# 复制到仓库根目录的 .gitlab-ci.yml
+# 使用前在 GitLab 项目 Settings → CI/CD → Variables 里配好：
+#   CI_REGISTRY、CI_REGISTRY_USER、CI_REGISTRY_PASSWORD（GitLab 内置变量通常已自动提供）
+stages:
+  - lint
+  - build
+
+variables:
+  REGISTRY: ${CI_REGISTRY}
+  IMAGE_NAME: ${CI_REGISTRY}/${CI_PROJECT_PATH}
+
+helm-lint:
+  stage: lint
+  image:
+    name: alpine/helm:3.14
+    entrypoint: [""]
+  script:
+    - helm lint ./helm/nginx-monitoring --strict
+    - helm template nginx-monitoring ./helm/nginx-monitoring > /dev/null
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build-and-push:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - docker build -t ${IMAGE_NAME}:${CI_COMMIT_SHA} ./docker/day1-app
+    - docker push ${IMAGE_NAME}:${CI_COMMIT_SHA}
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
