@@ -1,0 +1,8 @@
+FROM python:3.12 AS builder
+RUN pip install --prefix=/install flask
+
+FROM python:3.12-alpine
+WORKDIR /app
+COPY --from=builder /install /usr/local
+COPY app.py .
+CMD ["python", "app.py"]
