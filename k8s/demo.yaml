@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-traced
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-traced
+  template:
+    metadata:
+      labels:
+        app: demo-traced
+    spec:
+      containers:
+      - name: app
+        image: <your-registry>:5000/demo-traced:v1   # 替换为你的私有仓库地址
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-traced
+spec:
+  selector:
+    app: demo-traced
+  ports:
+  - port: 5000
+    targetPort: 5000
