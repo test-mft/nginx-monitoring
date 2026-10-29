@@ -47,5 +47,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./docker/day1-app
+          file: ./docker/day1-app/Dockerfile.single 
           push: true
           tags: ghcr.io/${{ github.repository }}/myapp:${{ github.sha }}
