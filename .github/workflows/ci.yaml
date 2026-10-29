@@ -24,7 +24,7 @@ jobs:
 
       - name: Run helm template (render check)
         run: helm template nginx-monitoring ./helm/nginx-monitoring > /dev/null
- 
+
   build-and-push:
     name: 'Build and Push Docker Image'
     needs: helm-validate
@@ -48,4 +48,4 @@ jobs:
         with:
           context: ./docker/day1-app
           push: true
-          tags: ghcr.io/${{ github.repository }}/myapp:${{ github.sha }} 
+          tags: ghcr.io/${{ github.repository }}/myapp:${{ github.sha }}
