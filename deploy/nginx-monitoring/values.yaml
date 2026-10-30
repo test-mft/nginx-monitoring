@@ -1,0 +1,5 @@
+nginx:
+  replicas: 2
+
+grafana:
+  adminPassword: admin123
