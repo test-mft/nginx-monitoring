@@ -1,5 +1,5 @@
 nginx:
-  replicas: 2
+  replicas: 4
 
 grafana:
   adminPassword: admin123
