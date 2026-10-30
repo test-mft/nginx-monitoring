@@ -27,3 +27,4 @@
 ## 真实配置文件不进 Git
 
 `daemon.json` 和 `registries.yaml` 里有内网 IP，已在 `.gitignore` 中排除。仓库里只放 `.example` 模板。
+test pr
