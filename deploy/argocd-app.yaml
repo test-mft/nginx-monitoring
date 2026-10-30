@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/你的用户名/k8s-observability-lab.git
+    repoURL: https://github.com/test-mft/nginx-monitoring.git
     targetRevision: main
     path: helm/nginx-monitoring
     helm:
