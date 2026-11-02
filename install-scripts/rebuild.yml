@@ -1,0 +1,9 @@
+- name: 重建系统环境
+  hosts: k3sserver
+  become: yes
+  vars: {}
+  roles:
+    - role: k3s
+    - role: helm
+    - role: chart
+

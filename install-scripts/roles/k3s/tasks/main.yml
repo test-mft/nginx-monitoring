@@ -1,0 +1,4 @@
+---
+- name: 安装k3s
+  shell: curl https://get.k3s.io | sh
+  creates: 
