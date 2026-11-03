@@ -4,6 +4,3 @@
   vars: {}
   roles:
     - role: k3s
-    - role: helm
-    - role: chart
-

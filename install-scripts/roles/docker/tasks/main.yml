@@ -1,0 +1,19 @@
+---
+- name: 检查docker安装情况
+  command: which docker
+  register: docker_binary
+  changed_when: false
+  failed_when: false
+
+- name: 安装docker
+  shell: curl -fssl https://get.docker.com | sh
+  when: docker_binary.rc != 0
+  register: docker_install
+
+- name: 检查docker运行情况
+  command: docker info
+  register: docker_info
+  changed_when: false
+  until: docker_info.rc == 0
+  retries: 10
+  delay: 2

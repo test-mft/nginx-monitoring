@@ -1,0 +1,7 @@
+---
+- name: 检查registry容器安装情况
+  command: docker
+- name: 安装registry
+  
+- name: 检查registry运行情况
+  
