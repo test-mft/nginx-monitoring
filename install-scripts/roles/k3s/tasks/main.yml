@@ -2,7 +2,7 @@
 - name: 检查k3s安装情况
   stat:
     path: /usr/local/bin/k3s
-    register: k3s_binary
+  register: k3s_binary
 
 - name: 安装k3s
   shell: curl https://get.k3s.io | sh
@@ -19,6 +19,6 @@
 
 - name: 输出正常运作信息
   debug:
-    message: "k3s正常运作中"
+    msg: "k3s正常运作中"
   changed_when: false
   failed_when: false
