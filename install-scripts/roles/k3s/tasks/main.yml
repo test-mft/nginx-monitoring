@@ -1,4 +1,24 @@
 ---
+- name: 检查k3s安装情况
+  stat:
+    path: /usr/local/bin/k3s
+    register: k3s_binary
+
 - name: 安装k3s
   shell: curl https://get.k3s.io | sh
-  creates: 
+  when: not k3s_binary.stat.exists
+  register: k3s_install
+
+- name: 检验k3s运行情况
+  command: kubectl get nodes
+  register: k3s_nodes
+  until: k3s_nodes.rc == 0 and 'Ready' in k3s_nodes.stdout
+  retries: 30
+  delay: 5
+  changed_when: false
+
+- name: 输出正常运作信息
+  debug:
+    message: "k3s正常运作中"
+  changed_when: false
+  failed_when: false
