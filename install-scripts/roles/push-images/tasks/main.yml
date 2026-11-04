@@ -1,3 +1,17 @@
+---
+- name: 检查 myapp 镜像是否在本地
+  command: docker images -q myapp:day1
+  register: myapp_local
+  changed_when: false
+
+- name: 构建 myapp 镜像
+  command: >
+    docker build
+    -f {{ playbook_dir }}/../docker/day1-app/Dockerfile.single
+    -t myapp:day1
+    {{ playbook_dir }}/../docker/day1-app
+  when: myapp_local.stdout == ""
+
 - name: 检查镜像是否已在 registry
   uri:
     url: "http://{{ registry }}/v2/{{ item.repo }}/tags/list"

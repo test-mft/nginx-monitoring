@@ -1,5 +1,4 @@
 ---
----
 # ===== 第 1 段：查 =====
 - name: 检查 Helm 是否已安装
   command: which helm
