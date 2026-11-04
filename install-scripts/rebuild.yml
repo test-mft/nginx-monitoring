@@ -1,6 +1,26 @@
 - name: 重建系统环境
   hosts: k3sserver
   become: yes
-  vars: {}
   roles:
     - role: k3s
+      tags: [k3s, all]
+    - role: docker
+      tags: [docker, all]
+    - role: registry
+      tags: [registry, all]
+    - role: docker-trust
+      tags: [trust, all]
+    - role: k3s-trust
+      tags: [trust, all]
+    - role: push-images
+      tags: [images, all]
+    - role: helm
+      tags: [helm, all]
+    - role: helm-chart
+      tags: [chart, all]
+    - role: loki
+      tags: [loki, all]
+    - role: jaeger
+      tags: [jaeger, all]
+    - role: argocd
+      tags: [argocd, all]

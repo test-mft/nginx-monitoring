@@ -1,0 +1,24 @@
+---
+---
+# ===== 第 1 段：查 =====
+- name: 检查 Helm 是否已安装
+  command: which helm
+  register: helm_binary
+  changed_when: false
+  failed_when: false
+
+# ===== 第 2 段：做 =====
+- name: 安装 Helm
+  shell: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  when: helm_binary.rc != 0
+  register: helm_install
+
+# ===== 第 3 段：验 =====
+- name: 验证 Helm 可用
+  command: helm version --short
+  register: helm_version
+  changed_when: false
+
+- name: 显示 Helm 版本
+  debug:
+    msg: "Helm 版本: {{ helm_version.stdout }}"

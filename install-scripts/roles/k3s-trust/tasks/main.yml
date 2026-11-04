@@ -1,0 +1,63 @@
+---
+# ===== 第 1 段：查状态 =====
+- name: 检查 registries.yaml 是否存在
+  stat:
+    path: /etc/rancher/k3s/registries.yaml
+  register: registries_file
+
+- name: 读取现有 registries.yaml 内容（如果存在）
+  slurp:
+    src: /etc/rancher/k3s/registries.yaml
+  register: registries_content
+  when: registries_file.stat.exists
+
+- name: 判断内容是否已包含目标 registry
+  set_fact:
+    registries_configured: >-
+      {{
+        registries_file.stat.exists
+        and registries_content.content is defined
+        and (registries_content.content | b64decode) is search(registry | regex_escape)
+      }}
+
+# ===== 第 2 段：没配就配 =====
+- name: 写入 registries.yaml
+  template:
+    src: registries.yaml.j2
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: "0600"
+  when: not registries_configured
+  register: registries_written
+
+# ===== 第 3 段：改了就重启，再验证 =====
+- name: 重启 K3s（仅在配置变化时）
+  systemd:
+    name: k3s
+    state: restarted
+  when: registries_written is changed
+  register: k3s_restarted
+
+- name: 等待 K3s 恢复
+  command: kubectl get nodes
+  register: k3s_ready
+  until: k3s_ready.rc == 0 and 'Ready' in k3s_ready.stdout
+  retries: 30
+  delay: 3
+  changed_when: false
+  when: k3s_restarted is changed
+
+- name: 显示 registries.yaml 内容
+  command: cat /etc/rancher/k3s/registries.yaml
+  register: registries_show
+  changed_when: false
+
+- name: 输出当前配置
+  debug:
+    msg: "{{ registries_show.stdout_lines }}"
+
+- name: 验证文件包含目标 registry
+  assert:
+    that:
+      - registry in registries_show.stdout
+    fail_msg: "registries.yaml 里没有 {{ registry }}，配置失败"
+    success_msg: "registries.yaml 配置正确"
