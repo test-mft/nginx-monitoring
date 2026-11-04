@@ -1,0 +1,20 @@
+---
+- name: 检查 Helm release 是否存在
+  command: helm list -A -o json
+  register: helm_list
+  changed_when: false
+
+- name: 设置 release 状态
+  set_fact:
+    chart_installed: "{{ (helm_list.stdout | from_json | selectattr('name', 'equalto', 'nginx-monitoring') | list | length) > 0 }}"
+
+- name: 安装或升级 nginx-monitoring Chart
+  kubernetes.core.helm:
+    name: nginx-monitoring
+    chart_ref: "{{ playbook_dir }}/../helm/nginx-monitoring"
+    release_namespace: default
+    values_files:
+      - "{{ playbook_dir }}/../deploy/nginx-monitoring/values.yaml"
+    state: "{{ 'upgraded' if chart_installed else 'present' }}"
+    wait: true
+    timeout: 5m

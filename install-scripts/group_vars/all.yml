@@ -1,0 +1,18 @@
+---
+registry_ip: "172.20.211.10"
+registry_port: 5000
+registry: "{{ registry_ip }}:{{ registry_port }}"
+registry_data_dir: "/data/registry"
+
+images:
+  day1: "myapp:day1"
+  demo: "demo-traced:v1"
+
+loki_version: "2.9.6"
+
+github_user: "test-mft"
+github_repo: "nginx-monitoring"
+git_branch: "main"
+
+argocd_namespace: "argocd"
+argocd_admin_password: ""  # 留空则自动读取初始密码

@@ -1,0 +1,18 @@
+- name: 检查镜像是否已在 registry
+  uri:
+    url: "http://{{ registry }}/v2/{{ item.repo }}/tags/list"
+    status_code: 200
+  register: tag_check
+  failed_when: false
+  loop:
+    - { repo: "myapp", tag: "{{ images.day1.split(':')[1] }}" }
+    - { repo: "demo-traced", tag: "{{ images.demo.split(':')[1] }}" }
+
+- name: 推送缺失的镜像
+  shell: |
+    docker tag {{ item.image }} {{ registry }}/{{ item.image }}
+    docker push {{ registry }}/{{ item.image }}
+  when: tag_check.results[0].status is not defined or tag_check.results[0].status != 200
+  loop:
+    - { image: "{{ images.day1 }}" }
+    - { image: "{{ images.demo }}" }

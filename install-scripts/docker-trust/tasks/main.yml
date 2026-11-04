@@ -1,0 +1,26 @@
+---
+- name: 读取 daemon.json
+  slurp:
+    src: /etc/docker/daemon.json
+  register: daemon_json
+  failed_when: false
+
+- name: 检查是否已包含 registry
+  set_fact:
+    daemon_configured: "{{ daemon_json.content is defined and (daemon_json.content | b64decode | from_json).insecure-registries is defined and registry in (daemon_json.content | b64decode | from_json).insecure-registries }}"
+
+- name: 写入 daemon.json
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "insecure-registries": ["{{ registry }}"]
+      }
+  when: not daemon_configured
+  register: daemon_written
+
+- name: 重启 Docker（仅在配置变化时）
+  systemd:
+    name: docker
+    state: restarted
+  when: daemon_written is changed

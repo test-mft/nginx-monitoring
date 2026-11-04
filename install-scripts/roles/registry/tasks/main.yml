@@ -1,7 +1,23 @@
 ---
 - name: 检查registry容器安装情况
-  command: docker
+  command: docker ps --fiter "name=^restry$" --format "{{ '{{' }}.Names{{ '}}' }}"
+  register: registry_running
+  changed_when: false
+  failed_when: false
 - name: 安装registry
-  
+  command: >
+  docker run -d
+  --name registry
+  -v {{ registry_data_dir }}:/var/lib/lib/registry
+  -p {{ registry_port }}:5000
+  --restart=always
+  registry:2
+when: 'registry' not in registry_running.stdout
 - name: 检查registry运行情况
-  
+  uri:
+    url: "http://{{ registry }}/v2/"
+    status_code: 401
+  retries: 10
+  delay: 2
+  register: registry_check
+  until: registry_check.status == 401
