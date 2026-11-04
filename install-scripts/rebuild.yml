@@ -1,6 +1,8 @@
 - name: 重建系统环境
   hosts: k3sserver
   become: yes
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   roles:
     - role: k3s
       tags: [k3s, all]

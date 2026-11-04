@@ -1,9 +1,16 @@
 ---
+# ===== 第 1 段：查本地镜像 =====
 - name: 检查 myapp 镜像是否在本地
   command: docker images -q myapp:day1
   register: myapp_local
   changed_when: false
 
+- name: 检查 demo-traced 镜像是否在本地
+  command: docker images -q demo-traced:v1
+  register: demo_local
+  changed_when: false
+
+# ===== 第 2 段：本地没有就 build =====
 - name: 构建 myapp 镜像
   command: >
     docker build
@@ -12,21 +19,51 @@
     {{ playbook_dir }}/../docker/day1-app
   when: myapp_local.stdout == ""
 
-- name: 检查镜像是否已在 registry
-  uri:
-    url: "http://{{ registry }}/v2/{{ item.repo }}/tags/list"
-    status_code: 200
-  register: tag_check
-  failed_when: false
-  loop:
-    - { repo: "myapp", tag: "{{ images.day1.split(':')[1] }}" }
-    - { repo: "demo-traced", tag: "{{ images.demo.split(':')[1] }}" }
+- name: 构建 demo-traced 镜像
+  command: >
+    docker build
+    -t demo-traced:v1
+    {{ playbook_dir }}/../docker/jaeger-demo
+  when: demo_local.stdout == ""
 
-- name: 推送缺失的镜像
+# ===== 第 3 段：查 Registry 里有没有 =====
+- name: 检查 myapp 是否已在 Registry
+  uri:
+    url: "http://{{ registry }}/v2/myapp/tags/list"
+    status_code: 200
+  register: myapp_remote
+  failed_when: false
+  changed_when: false
+
+- name: 检查 demo-traced 是否已在 Registry
+  uri:
+    url: "http://{{ registry }}/v2/demo-traced/tags/list"
+    status_code: 200
+  register: demo_remote
+  failed_when: false
+  changed_when: false
+
+# ===== 第 4 段：Registry 没有就推 =====
+- name: 推送 myapp 到 Registry
   shell: |
-    docker tag {{ item.image }} {{ registry }}/{{ item.image }}
-    docker push {{ registry }}/{{ item.image }}
-  when: tag_check.results[0].status is not defined or tag_check.results[0].status != 200
-  loop:
-    - { image: "{{ images.day1 }}" }
-    - { image: "{{ images.demo }}" }
+    docker tag myapp:day1 {{ registry }}/myapp:day1
+    docker push {{ registry }}/myapp:day1
+  when: myapp_remote.status is not defined or myapp_remote.status != 200
+
+- name: 推送 demo-traced 到 Registry
+  shell: |
+    docker tag demo-traced:v1 {{ registry }}/demo-traced:v1
+    docker push {{ registry }}/demo-traced:v1
+  when: demo_remote.status is not defined or demo_remote.status != 200
+
+# ===== 第 5 段：验证 =====
+- name: 验证 Registry 镜像列表
+  uri:
+    url: "http://{{ registry }}/v2/_catalog"
+    return_content: yes
+  register: catalog
+  changed_when: false
+
+- name: 输出镜像列表
+  debug:
+    msg: "{{ catalog.content | from_json }}"

@@ -2,6 +2,7 @@
   kubernetes.core.k8s:
     state: present
     src: "{{ playbook_dir }}/../k8s/{{ item }}"
+    namespace: default
   loop:
     - jaeger.yaml
     - demo.yaml

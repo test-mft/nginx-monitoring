@@ -1,3 +1,10 @@
+- name: 创建argocd命名空间
+  kubernetes.core.k8s:
+    name: argocd
+    api_version: v1
+    kind: Namespace
+    state: present
+
 - name: 安装 ArgoCD
   kubernetes.core.k8s:
     state: present

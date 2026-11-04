@@ -1,3 +1,9 @@
+- name: 添加grafana仓库
+  command: helm repo add grafana https://grafana.github.io/helm-charts
+
+- name: 更新仓库
+  command: helm repo update
+
 - name: 安装 loki-stack
   kubernetes.core.helm:
     name: loki
