@@ -1,0 +1,13 @@
+- name: 安装 loki-stack
+  kubernetes.core.helm:
+    name: loki
+    chart_ref: grafana/loki-stack
+    release_namespace: monitoring
+    create_namespace: true
+    values:
+      grafana.enabled: false
+      prometheus.enabled: false
+      loki.image.tag: "{{ loki_version }}"
+    state: present
+    wait: true
+    timeout: 5m
