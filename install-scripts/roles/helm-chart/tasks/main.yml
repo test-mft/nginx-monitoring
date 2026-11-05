@@ -1,0 +1,12 @@
+---
+- name: 安装或升级 nginx-monitoring Chart
+  kubernetes.core.helm:
+    name: nginx-monitoring
+    chart_ref: "{{ playbook_dir }}/../helm/nginx-monitoring"
+    release_namespace: default
+    values_files:
+      - "{{ playbook_dir }}/../deploy/nginx-monitoring/values.yaml"
+    state: present
+    wait: true
+    timeout: 5m
+  delegate_to: localhost   # 若 helm/kubeconfig/文件都在控制节点上

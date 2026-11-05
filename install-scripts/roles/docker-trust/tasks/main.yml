@@ -1,0 +1,44 @@
+---
+- name: 检查 daemon.json 是否存在
+  stat:
+    path: /etc/docker/daemon.json
+  register: daemon_file
+
+- name: 读取 daemon.json（如果存在）
+  slurp:
+    src: /etc/docker/daemon.json
+  register: daemon_json
+  when: daemon_file.stat.exists
+
+- name: 判断是否已包含 registry
+  set_fact:
+    daemon_configured: >-
+      {{
+        daemon_file.stat.exists
+        and (registry in ((daemon_json.content | b64decode | from_json)['insecure-registries'] | default([])))
+      }}
+
+- name: 写入 daemon.json
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "insecure-registries": ["{{ registry }}"]
+      }
+  when: not daemon_configured
+  register: daemon_written
+
+- name: 重启 Docker（仅在配置变化时）
+  systemd:
+    name: docker
+    state: restarted
+  when: daemon_written is changed
+
+- name: 验证 daemon.json 内容
+  command: cat /etc/docker/daemon.json
+  register: daemon_show
+  changed_when: false
+
+- name: 输出当前配置
+  debug:
+    msg: "{{ daemon_show.stdout_lines }}"

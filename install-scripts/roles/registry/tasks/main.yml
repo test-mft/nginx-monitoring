@@ -1,7 +1,25 @@
 ---
-- name: 检查registry容器安装情况
-  command: docker
-- name: 安装registry
-  
-- name: 检查registry运行情况
-  
+- name: 检查 registry 容器是否运行
+  command: docker ps --filter "name=^registry$" --format "{{ '{{' }}.Names{{ '}}' }}"
+  register: registry_running
+  changed_when: false
+  failed_when: false
+
+- name: 启动 registry 容器
+  command: >
+    docker run -d
+    --name registry
+    -v {{ registry_data_dir }}:/var/lib/registry
+    -p {{ registry_port }}:5000
+    --restart=always
+    registry:2
+  when: "'registry' not in registry_running.stdout"
+
+- name: 等待 registry 可访问
+  uri:
+    url: "http://{{ registry }}/v2/_catalog"
+    status_code: 200
+  retries: 10
+  delay: 2
+  register: registry_check
+  until: registry_check.status == 200
